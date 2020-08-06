@@ -12,8 +12,9 @@ var readMutex = &sync.Mutex{}
 var writeMutex = &sync.Mutex{}
 
 type ProductRepository interface {
-	AddProduct(p Product)
+	AddProduct(p Product) error
 	RemoveProduct(p Product) error
+	UpdateProduct(p Product) error
 	AllProducts() []Product
 	loadAllProducts()
 	InitRepo()
@@ -29,17 +30,25 @@ type Product struct {
 	Name string
 }
 
-func (r *DefaultRepository) AddProduct(p Product) {
+func (r *DefaultRepository) UpdateProduct(p Product) error {
+	writeMutex.Lock()
+	defer writeMutex.Unlock()
+	_, err := r.DB.Exec("UPDATE products SET name = $1 where products.id = $2", p.Name, p.Id)
+	return err
+}
+
+func (r *DefaultRepository) AddProduct(p Product) error {
 	writeMutex.Lock()
 	defer writeMutex.Unlock()
 	_, err := r.DB.Exec("INSERT INTO products (name) VALUES ($1)", p.Name)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	r.loadAllProducts()
+	go r.loadAllProducts()
+	return nil
 }
 
-func (r *DefaultRepository) loadAllProducts(){
+func (r *DefaultRepository) loadAllProducts() {
 	readMutex.Lock()
 	defer readMutex.Unlock()
 	rows, err := r.DB.Query("SELECT * from products")
@@ -47,7 +56,7 @@ func (r *DefaultRepository) loadAllProducts(){
 		log.Fatal(err)
 	}
 	r.Products = make([]Product, 0)
-	for rows.Next(){
+	for rows.Next() {
 		prod := Product{}
 		ok := rows.Scan(&prod.Id, &prod.Name)
 		if ok != nil {
