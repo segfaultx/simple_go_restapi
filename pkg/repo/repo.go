@@ -71,7 +71,7 @@ func (r *DefaultRepository) RemoveProduct(p Product) error {
 	if err != nil {
 		return errors.New(err.Error())
 	}
-	r.loadAllProducts()
+	go r.loadAllProducts()
 	return nil
 }
 
