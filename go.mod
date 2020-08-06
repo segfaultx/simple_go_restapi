@@ -1,4 +1,4 @@
-module gitlab.com/amatusm
+module gitlab.com/amatusm/simpleREST
 
 go 1.14
 

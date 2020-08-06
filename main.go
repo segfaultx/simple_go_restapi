@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"gitlab.com/amatusm/pkg/repo"
+	"gitlab.com/amatusm/simpleREST/pkg/repo"
 	"log"
 	"net/http"
 	"strconv"
