@@ -14,13 +14,14 @@ func MakeProductsHandler(repository repo.ProductRepository) http.HandlerFunc {
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 		switch r.Method {
 		case "GET":
 			{
 				handleGet(repository, w, id)
-				break
 			}
 
 		case "DELETE":
@@ -42,6 +43,7 @@ func handleGet(repository repo.ProductRepository, w http.ResponseWriter, id int)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("couldn't find the requested object"))
+		return
 	}
 	resp, _ := json.Marshal(product)
 	w.WriteHeader(http.StatusOK)
@@ -53,7 +55,7 @@ func handleDelete(repository repo.ProductRepository, w http.ResponseWriter, id i
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("Error removing Product"))
-		log.Fatal(err)
+		log.Print(err)
 	}
 }
 
@@ -63,14 +65,14 @@ func handlePut(repository repo.ProductRepository, w http.ResponseWriter, r *http
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("Malformed JSON request"))
-		log.Fatal(err)
+		log.Print(err)
 	}
 	product.Id = id
 	err = repository.UpdateProduct(product)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("Error updating product"))
-		log.Fatal(err)
+		log.Print(err)
 	}
 	w.WriteHeader(http.StatusOK)
 	resp, _ := json.Marshal(product)
