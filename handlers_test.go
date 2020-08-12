@@ -40,6 +40,10 @@ func (r *mockRepo) InitRepo() {
 	return
 }
 
+func (r *mockRepo) GetProductById(id int) (repo.Product, error) {
+	return repo.Product{}, errors.New("NYI")
+}
+
 func (r *mockRepo) RemoveProduct(product repo.Product) error {
 	for index, item := range r.Products {
 		if (item.Id == product.Id) && (item.Name == product.Name) {
@@ -52,6 +56,12 @@ func (r *mockRepo) RemoveProduct(product repo.Product) error {
 }
 
 var repository mockRepo
+const contentTypeHeader = "Content-Type"
+const contentType = "application/json"
+const errorMsgStatuscode = "unexpected status code, got %d expected %d"
+const errorMsgResponseBody = "unexpected response body, got %s wanted %s"
+const baseUrl = "/catalog/products"
+
 
 func initMockRepo() {
 	testProducts := make([]repo.Product, 0)
@@ -68,7 +78,7 @@ func initMockRepo() {
 func TestMakeAllProductsHandlerGET(t *testing.T) {
 	initMockRepo()
 
-	req, err := http.NewRequest("GET", "/catalog/products", nil)
+	req, err := http.NewRequest("GET", baseUrl, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +86,7 @@ func TestMakeAllProductsHandlerGET(t *testing.T) {
 	handler := MakeAllProductsHandler(&repository)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("unexpected statuscode, got %d expected %d", status, http.StatusOK)
+		t.Errorf(errorMsgStatuscode, status, http.StatusOK)
 	}
 	expected, _ := json.Marshal(repository.Products)
 	if response := rr.Body.String(); response != string(expected) {
@@ -93,46 +103,46 @@ func TestMakeAllProductsHandlerPOST(t *testing.T) {
 	newProducts = append(newProducts, repository.Products...)
 
 	reader := bytes.NewReader(newProductJson)
-	req, err := http.NewRequest("POST", "/catalog/products", reader)
+	req, err := http.NewRequest("POST", baseUrl, reader)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(contentTypeHeader, contentType)
 	rr := httptest.NewRecorder()
 	handler := MakeAllProductsHandler(&repository)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("unexpected statuscode, got %d expected %d", status, http.StatusOK)
+		t.Errorf(errorMsgStatuscode, status, http.StatusOK)
 	}
 
 	expected, _ := json.Marshal(newProduct)
 	if response := rr.Body.String(); response != string(expected) {
-		t.Errorf("unexpected responsebody, got %s wanted %s", response, expected)
+		t.Errorf(errorMsgResponseBody, response, expected)
 	}
 }
 
 func TestMakeAllProductsHandlerPOSTFail(t *testing.T) {
 	initMockRepo()
 	reader := bytes.NewReader([]byte("aiusazdvawldkab"))
-	req, err := http.NewRequest("POST", "/catalog/products", reader)
+	req, err := http.NewRequest("POST", baseUrl, reader)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(contentTypeHeader, contentType)
 	rr := httptest.NewRecorder()
 	handler := MakeAllProductsHandler(&repository)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("unexpected statuscode, got %d expected %d", status, http.StatusInternalServerError)
+		t.Errorf(errorMsgStatuscode, status, http.StatusInternalServerError)
 	}
 	failproduct, _ := json.Marshal(repo.Product{Id: -1, Name: "bloe"})
 	reader = bytes.NewReader(failproduct)
-	req, err = http.NewRequest("POST", "/catalog/products", reader)
+	req, err = http.NewRequest("POST", baseUrl, reader)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set(contentTypeHeader, contentType)
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusInternalServerError {
