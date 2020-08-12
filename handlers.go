@@ -19,54 +19,62 @@ func MakeProductsHandler(repository repo.ProductRepository) http.HandlerFunc {
 		switch r.Method {
 		case "GET":
 			{
-				for _, item := range repository.AllProducts() {
-					if item.Id == id {
-						resp, _ := json.Marshal(item)
-						w.WriteHeader(http.StatusOK)
-						_, err = w.Write(resp)
-						if err != nil {
-							w.WriteHeader(http.StatusInternalServerError)
-							_, _ = w.Write([]byte("Error writing response"))
-							log.Fatal(err)
-						}
-						break
-					}
-				}
+				handleGet(repository, w, id)
+				break
 			}
+
 		case "DELETE":
 			{
-				dberr := repository.RemoveProduct(repo.Product{Id: id})
-				if dberr != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					_, _ = w.Write([]byte("Error removing Product"))
-					log.Fatal(err)
-				}
+				handleDelete(repository, w, id)
 			}
 		case "PUT":
 			{
-				product := repo.Product{}
-				err := decodeRequestBody(&product, r)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					_, _ = w.Write([]byte("Malformed JSON request"))
-					log.Fatal(err)
-				}
-				product.Id = id
-				err = repository.UpdateProduct(product)
-				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					_, _ = w.Write([]byte("Error updating product"))
-					log.Fatal(err)
-				}
-				w.WriteHeader(http.StatusOK)
-				resp, _ := json.Marshal(product)
-				_, _ = w.Write(resp)
-
+				handlePut(repository, w, r, id)
 			}
 
 		}
 
 	}
+}
+
+func handleGet(repository repo.ProductRepository, w http.ResponseWriter, id int) {
+	product, err := repository.GetProductById(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("couldn't find the requested object"))
+	}
+	resp, _ := json.Marshal(product)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(resp)
+}
+
+func handleDelete(repository repo.ProductRepository, w http.ResponseWriter, id int) {
+	err := repository.RemoveProduct(repo.Product{Id: id})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("Error removing Product"))
+		log.Fatal(err)
+	}
+}
+
+func handlePut(repository repo.ProductRepository, w http.ResponseWriter, r *http.Request, id int) {
+	product := repo.Product{}
+	err := decodeRequestBody(&product, r)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("Malformed JSON request"))
+		log.Fatal(err)
+	}
+	product.Id = id
+	err = repository.UpdateProduct(product)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("Error updating product"))
+		log.Fatal(err)
+	}
+	w.WriteHeader(http.StatusOK)
+	resp, _ := json.Marshal(product)
+	_, _ = w.Write(resp)
 }
 
 func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc {
