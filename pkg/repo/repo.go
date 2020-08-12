@@ -16,7 +16,7 @@ type ProductRepository interface {
 	RemoveProduct(p Product) error
 	UpdateProduct(p Product) error
 	AllProducts() []Product
-	loadAllProducts()
+	GetProductById(id int) (Product, error)
 	InitRepo()
 }
 
@@ -28,6 +28,15 @@ type DefaultRepository struct {
 type Product struct {
 	Id   int
 	Name string
+}
+
+func (r *DefaultRepository) GetProductById(id int) (Product, error) {
+	for _, item  := range r.AllProducts() {
+		if item.Id == id {
+			return item, nil
+		}
+	}
+	return Product{}, errors.New("no such item")
 }
 
 func (r *DefaultRepository) UpdateProduct(p Product) error {
