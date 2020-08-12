@@ -84,10 +84,7 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 			{
 				products := repository.AllProducts()
 				resp, _ := json.Marshal(products)
-				_, err := writer.Write(resp)
-				if err != nil {
-					log.Fatal(err)
-				}
+				_, _ = writer.Write(resp)
 			}
 		case "POST":
 			{
@@ -96,9 +93,6 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 				if err != nil {
 					writer.WriteHeader(http.StatusInternalServerError)
 					_, err = writer.Write([]byte(err.Error()))
-					if err != nil {
-						log.Fatal(err)
-					}
 					return
 				}
 				err = repository.AddProduct(product)
@@ -107,8 +101,8 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 					_, _ = writer.Write([]byte("Error adding Product to database"))
 					return
 				}
-				respo, _ := json.Marshal(product)
-				_, _ = writer.Write(respo)
+				resp, _ := json.Marshal(product)
+				_, _ = writer.Write(resp)
 			}
 		}
 	}
