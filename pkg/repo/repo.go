@@ -3,8 +3,10 @@ package repo
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	_ "github.com/lib/pq"
 	"log"
+	"os"
 	"sync"
 )
 
@@ -95,7 +97,11 @@ func (r *DefaultRepository) RemoveProduct(p Product) error {
 
 func (r *DefaultRepository) InitRepo() {
 	var err error
-	r.DB, err = sql.Open("postgres", "user=postgres password=hallo123 dbname=postgres sslmode=disable")
+	passwd := os.Getenv("POSTGRES_PASSWORD")
+	user := os.Getenv("POSTGRES_USER")
+	dbname := os.Getenv("POSTGRES_DBNAME")
+	dataSourceString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, passwd, dbname)
+	r.DB, err = sql.Open("postgres", dataSourceString)
 	if err != nil {
 		log.Fatal(err)
 	}
