@@ -28,12 +28,12 @@ type DefaultRepository struct {
 }
 
 type Product struct {
-	Id   int
-	Name string
+	Id   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 func (r *DefaultRepository) GetProductById(id int) (Product, error) {
-	for _, item  := range r.AllProducts() {
+	for _, item := range r.AllProducts() {
 		if item.Id == id {
 			return item, nil
 		}
