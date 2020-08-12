@@ -1,6 +1,6 @@
 module gitlab.com/amatusm/simpleREST
 
-go 1.14
+go 1.15
 
 require (
 	github.com/gorilla/mux v1.7.4
