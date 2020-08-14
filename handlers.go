@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"gitlab.com/amatusm/simpleREST/pkg/repo"
+	"github.com/segfaultx/simple_rest/pkg/repo"
 	"log"
 	"net/http"
 	"strconv"
@@ -94,7 +94,7 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 				err := decodeRequestBody(&product, request)
 				if err != nil {
 					writer.WriteHeader(http.StatusInternalServerError)
-					_, err = writer.Write([]byte(err.Error()))
+					_, _ = writer.Write([]byte(err.Error()))
 					return
 				}
 				err = repository.AddProduct(product)
