@@ -64,6 +64,7 @@ func (r *DefaultRepository) loadAllProducts() {
 	defer readMutex.Unlock()
 	rows, err := r.DB.Query("SELECT * from products")
 	if err != nil {
+		readMutex.Unlock()
 		log.Fatal(err)
 	}
 	r.Products = make([]Product, 0)
