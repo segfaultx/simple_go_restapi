@@ -19,22 +19,17 @@ func MakeProductsHandler(repository repo.ProductRepository) http.HandlerFunc {
 			return
 		}
 		switch r.Method {
-		case "GET":
-			{
+		case "GET": {
 				handleGet(repository, w, id)
 			}
 
-		case "DELETE":
-			{
+		case "DELETE": {
 				handleDelete(repository, w, id)
 			}
-		case "PUT":
-			{
+		case "PUT": {
 				handlePut(repository, w, r, id)
 			}
-
 		}
-
 	}
 }
 
@@ -82,14 +77,12 @@ func handlePut(repository repo.ProductRepository, w http.ResponseWriter, r *http
 func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
-		case "GET":
-			{
+		case "GET":{
 				products := repository.AllProducts()
 				resp, _ := json.Marshal(products)
 				_, _ = writer.Write(resp)
 			}
-		case "POST":
-			{
+		case "POST":{
 				product := repo.Product{}
 				err := decodeRequestBody(&product, request)
 				if err != nil {
