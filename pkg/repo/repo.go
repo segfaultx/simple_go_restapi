@@ -9,28 +9,28 @@ import (
 	"sync"
 )
 
-var readMutex = &sync.Mutex{}
-var writeMutex = &sync.Mutex{}
-
-type ProductRepository interface {
-	AddProduct(p Product) error
-	RemoveProduct(p Product) error
-	UpdateProduct(p Product) error
-	AllProducts() []Product
-	GetProductById(id int) (Product, error)
-	InitRepo(user, passwd, dbname string) error
-	Close()
-}
-
-type DefaultRepository struct {
+type (
+	ProductRepository interface {
+		AddProduct(p Product) error
+		RemoveProduct(p Product) error
+		UpdateProduct(p Product) error
+		AllProducts() []Product
+		GetProductById(id int) (Product, error)
+		InitRepo(user, passwd, dbname string) error
+		Close()
+	}
+	DefaultRepository struct {
 	Products []Product
 	DB       *sql.DB
 }
+	Product struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+	}
+)
 
-type Product struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-}
+var readMutex = &sync.Mutex{}
+var writeMutex = &sync.Mutex{}
 
 func (r *DefaultRepository) GetProductById(id int) (Product, error) {
 	for _, item := range r.AllProducts() {
