@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	r := mux.NewRouter()
+	router := mux.NewRouter()
 	repository := repo.DefaultRepository{Products: nil}
 	defer repository.Close()
 	defer func() {
@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	r.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
-	r.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(&repository)).Methods("GET", "POST")
+	router.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
+	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(&repository)).Methods("GET", "POST")
 	_ = http.ListenAndServe(":8080", r)
 }
