@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"gitlab.com/amatusm/simpleREST/pkg/repo"
+	"github.com/segfaultx/simple_rest/pkg/repo"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +17,7 @@ func main() {
 	dbname := os.Getenv("POSTGRES_DBNAME")
 	err := repository.InitRepo(user, passwd, dbname)
 	if err != nil {
+		repository.Close()
 		log.Fatal(err)
 	}
 	r.HandleFunc("/catalog/products/{id}", MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
