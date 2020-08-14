@@ -1,6 +1,6 @@
 version = 1
 
-test_patterns = ["*_test.go"]
+test_patterns = ["tests/*_test.go"]
 
 [[analyzers]]
 name = "go"
