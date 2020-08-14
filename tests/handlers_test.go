@@ -16,16 +16,16 @@ type mockRepo struct {
 	Products []repo.Product
 }
 
-func (r *mockRepo) AddProduct(product repo.Product) error {
+func (mockRepo *mockRepo) AddProduct(product repo.Product) error {
 	if product.Id == -1 {
 		return errors.New("-1 is the signal from test to throw an error")
 	}
-	r.Products = append(r.Products, product)
+	mockRepo.Products = append(mockRepo.Products, product)
 	return nil
 }
 
-func (r *mockRepo) UpdateProduct(product repo.Product) error {
-	for _, item := range r.Products {
+func (mockRepo *mockRepo) UpdateProduct(product repo.Product) error {
+	for _, item := range mockRepo.Products {
 		if item.Id == product.Id {
 			item.Name = product.Name
 			return nil
@@ -34,32 +34,32 @@ func (r *mockRepo) UpdateProduct(product repo.Product) error {
 	return errors.New("could not find requested item")
 }
 
-func (r *mockRepo) AllProducts() []repo.Product {
-	return r.Products
+func (mockRepo *mockRepo) AllProducts() []repo.Product {
+	return mockRepo.Products
 }
 
-func (r *mockRepo) InitRepo(user, passwd, dbname string) error {
+func (mockRepo *mockRepo) InitRepo(user, passwd, dbname string) error {
 	return nil
 }
 
-func (r *mockRepo) GetProductById(id int) (repo.Product, error) {
+func (mockRepo *mockRepo) GetProductById(id int) (repo.Product, error) {
 	if id != 1 {
 		return repo.Product{}, errors.New("couldn't find the requested item")
 	}
-	return r.Products[0], nil
+	return mockRepo.Products[0], nil
 }
 
-func (r *mockRepo) RemoveProduct(product repo.Product) error {
-	for index, item := range r.Products {
+func (mockRepo *mockRepo) RemoveProduct(product repo.Product) error {
+	for index, item := range mockRepo.Products {
 		if item.Id == product.Id {
-			r.Products = append(r.Products[:index], r.Products[index+1:]...)
+			mockRepo.Products = append(mockRepo.Products[:index], mockRepo.Products[index+1:]...)
 			return nil
 		}
 	}
 	return errors.New("couldn't remove product")
 }
 
-func (r *mockRepo) Close() {
+func (mockRepo *mockRepo) Close() {
 	// dummy
 }
 
