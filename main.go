@@ -27,5 +27,5 @@ func main() {
 	}
 	router.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
 	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(&repository)).Methods("GET", "POST")
-	_ = http.ListenAndServe(":8080", r)
+	_ = http.ListenAndServe(":8080", router)
 }
