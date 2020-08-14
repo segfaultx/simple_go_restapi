@@ -18,7 +18,7 @@ type ProductRepository interface {
 	UpdateProduct(p Product) error
 	AllProducts() []Product
 	GetProductById(id int) (Product, error)
-	InitRepo(user string, passwd string, dbname string) error
+	InitRepo(user, passwd, dbname string) error
 	Close()
 }
 
@@ -62,10 +62,14 @@ func (r *DefaultRepository) AddProduct(p Product) error {
 func (r *DefaultRepository) loadAllProducts() {
 	readMutex.Lock()
 	defer readMutex.Unlock()
+	defer func() {
+		if rec := recover(); rec != nil {
+			log.Fatal(rec)
+		}
+	}()
 	rows, err := r.DB.Query("SELECT * from products")
 	if err != nil {
-		readMutex.Unlock()
-		log.Fatal(err)
+		panic(err)
 	}
 	r.Products = make([]Product, 0)
 	for rows.Next() {
@@ -96,7 +100,7 @@ func (r *DefaultRepository) RemoveProduct(p Product) error {
 	return nil
 }
 
-func (r *DefaultRepository) InitRepo(user string, passwd string, dbname string) error {
+func (r *DefaultRepository) InitRepo(user, passwd, dbname string) error {
 	dataSourceString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, passwd, dbname)
 	db, err := sql.Open("postgres", dataSourceString)
 	if err != nil {
