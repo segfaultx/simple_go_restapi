@@ -84,7 +84,7 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 				product := repo.Product{}
 				err := decodeRequestBody(&product, request)
 				if err != nil {
-					writer.WriteHeader(http.StatusInternalServerError)
+					writer.WriteHeader(http.StatusBadRequest)
 					_, _ = writer.Write([]byte(err.Error()))
 					return
 				}
