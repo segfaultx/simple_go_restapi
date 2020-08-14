@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/segfaultx/simple_rest/pkg/handlers"
 	"github.com/segfaultx/simple_rest/pkg/repo"
 	"log"
 	"net/http"
@@ -24,7 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	r.HandleFunc("/catalog/products/{id}", MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
-	r.HandleFunc("/catalog/products", MakeAllProductsHandler(&repository)).Methods("GET", "POST")
+	r.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
+	r.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(&repository)).Methods("GET", "POST")
 	_ = http.ListenAndServe(":8080", r)
 }
