@@ -1,4 +1,4 @@
-module gitlab.com/amatusm/simpleREST
+module github.com/segfaultx/simple_rest
 
 go 1.15
 
