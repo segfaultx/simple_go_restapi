@@ -37,8 +37,8 @@ func (r *mockRepo) AllProducts() []repo.Product {
 	return r.Products
 }
 
-func (r *mockRepo) InitRepo() {
-	return
+func (r *mockRepo) InitRepo(user string, passwd string, dbname string) error {
+	return nil
 }
 
 func (r *mockRepo) GetProductById(id int) (repo.Product, error) {
@@ -56,6 +56,10 @@ func (r *mockRepo) RemoveProduct(product repo.Product) error {
 		}
 	}
 	return errors.New("couldn't remove product")
+}
+
+func (r *mockRepo) Close() {
+	// dummy
 }
 
 var repository mockRepo
