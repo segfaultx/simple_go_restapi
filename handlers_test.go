@@ -37,7 +37,7 @@ func (r *mockRepo) AllProducts() []repo.Product {
 	return r.Products
 }
 
-func (r *mockRepo) InitRepo(user string, passwd string, dbname string) error {
+func (r *mockRepo) InitRepo(user, passwd, dbname string) error {
 	return nil
 }
 
