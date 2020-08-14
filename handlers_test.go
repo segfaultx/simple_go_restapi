@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
-	"gitlab.com/amatusm/simpleREST/pkg/repo"
+	"github.com/segfaultx/simple_rest/pkg/repo"
 	"net/http"
 	"net/http/httptest"
 	"testing"
