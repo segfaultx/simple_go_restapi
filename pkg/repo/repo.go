@@ -74,9 +74,9 @@ func (r *DefaultRepository) loadAllProducts() {
 	r.Products = make([]Product, 0)
 	for rows.Next() {
 		prod := Product{}
-		ok := rows.Scan(&prod.Id, &prod.Name)
-		if ok != nil {
-			log.Fatal(ok)
+		err = rows.Scan(&prod.Id, &prod.Name)
+		if err != nil {
+			panic(err)
 		}
 		r.Products = append(r.Products, prod)
 	}
