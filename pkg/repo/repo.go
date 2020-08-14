@@ -32,8 +32,8 @@ type (
 var readMutex = &sync.Mutex{}
 var writeMutex = &sync.Mutex{}
 
-func (r *DefaultRepository) GetProductById(id int) (Product, error) {
-	for _, item := range r.AllProducts() {
+func (repo *DefaultRepository) GetProductById(id int) (Product, error) {
+	for _, item := range repo.AllProducts() {
 		if item.Id == id {
 			return item, nil
 		}
@@ -41,25 +41,25 @@ func (r *DefaultRepository) GetProductById(id int) (Product, error) {
 	return Product{}, errors.New("no such item")
 }
 
-func (r *DefaultRepository) UpdateProduct(p Product) error {
+func (repo *DefaultRepository) UpdateProduct(p Product) error {
 	writeMutex.Lock()
 	defer writeMutex.Unlock()
-	_, err := r.DB.Exec("UPDATE products SET name = $1 where products.id = $2", p.Name, p.Id)
+	_, err := repo.DB.Exec("UPDATE products SET name = $1 where products.id = $2", p.Name, p.Id)
 	return err
 }
 
-func (r *DefaultRepository) AddProduct(p Product) error {
+func (repo *DefaultRepository) AddProduct(p Product) error {
 	writeMutex.Lock()
 	defer writeMutex.Unlock()
-	_, err := r.DB.Exec("INSERT INTO products (name) VALUES ($1)", p.Name)
+	_, err := repo.DB.Exec("INSERT INTO products (name) VALUES ($1)", p.Name)
 	if err != nil {
 		return err
 	}
-	go r.loadAllProducts()
+	go repo.loadAllProducts()
 	return nil
 }
 
-func (r *DefaultRepository) loadAllProducts() {
+func (repo *DefaultRepository) loadAllProducts() {
 	readMutex.Lock()
 	defer readMutex.Unlock()
 	defer func() {
@@ -67,40 +67,40 @@ func (r *DefaultRepository) loadAllProducts() {
 			log.Fatal(rec)
 		}
 	}()
-	rows, err := r.DB.Query("SELECT * from products")
+	rows, err := repo.DB.Query("SELECT * from products")
 	if err != nil {
 		panic(err)
 	}
-	r.Products = make([]Product, 0)
+	repo.Products = make([]Product, 0)
 	for rows.Next() {
 		prod := Product{}
 		err = rows.Scan(&prod.Id, &prod.Name)
 		if err != nil {
 			panic(err)
 		}
-		r.Products = append(r.Products, prod)
+		repo.Products = append(repo.Products, prod)
 	}
 }
 
-func (r *DefaultRepository) AllProducts() []Product {
-	if r.Products == nil {
-		r.loadAllProducts()
+func (repo *DefaultRepository) AllProducts() []Product {
+	if repo.Products == nil {
+		repo.loadAllProducts()
 	}
-	return r.Products
+	return repo.Products
 }
 
-func (r *DefaultRepository) RemoveProduct(p Product) error {
+func (repo *DefaultRepository) RemoveProduct(p Product) error {
 	writeMutex.Lock()
 	defer writeMutex.Unlock()
-	_, err := r.DB.Exec("DELETE FROM products WHERE id=$1", p.Id)
+	_, err := repo.DB.Exec("DELETE FROM products WHERE id=$1", p.Id)
 	if err != nil {
 		return errors.New(err.Error())
 	}
-	go r.loadAllProducts()
+	go repo.loadAllProducts()
 	return nil
 }
 
-func (r *DefaultRepository) InitRepo(user, passwd, dbname string) error {
+func (repo *DefaultRepository) InitRepo(user, passwd, dbname string) error {
 	dataSourceString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, passwd, dbname)
 	db, err := sql.Open("postgres", dataSourceString)
 	if err != nil {
@@ -110,11 +110,11 @@ func (r *DefaultRepository) InitRepo(user, passwd, dbname string) error {
 	if err != nil {
 		return err
 	}
-	r.DB = db
+	repo.DB = db
 	return err
 }
 
-func (r *DefaultRepository) Close() {
-	err := r.DB.Close()
+func (repo *DefaultRepository) Close() {
+	err := repo.DB.Close()
 	log.Fatal(err)
 }
