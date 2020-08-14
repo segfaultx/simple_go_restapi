@@ -6,7 +6,6 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 	"log"
-	"os"
 	"sync"
 )
 
@@ -19,7 +18,8 @@ type ProductRepository interface {
 	UpdateProduct(p Product) error
 	AllProducts() []Product
 	GetProductById(id int) (Product, error)
-	InitRepo()
+	InitRepo(user string, passwd string, dbname string) error
+	Close()
 }
 
 type DefaultRepository struct {
@@ -95,14 +95,21 @@ func (r *DefaultRepository) RemoveProduct(p Product) error {
 	return nil
 }
 
-func (r *DefaultRepository) InitRepo() {
-	var err error
-	passwd := os.Getenv("POSTGRES_PASSWORD")
-	user := os.Getenv("POSTGRES_USER")
-	dbname := os.Getenv("POSTGRES_DBNAME")
+func (r *DefaultRepository) InitRepo(user string, passwd string, dbname string) error {
 	dataSourceString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, passwd, dbname)
-	r.DB, err = sql.Open("postgres", dataSourceString)
+	db, err := sql.Open("postgres", dataSourceString)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	err = db.Ping()
+	if err != nil {
+		return err
+	}
+	r.DB = db
+	return err
+}
+
+func (r *DefaultRepository) Close() {
+	err := r.DB.Close()
+	log.Fatal(err)
 }
