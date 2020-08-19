@@ -19,13 +19,25 @@ type (
 		InitRepo(user, passwd, dbname string) error
 		Close()
 	}
+
+	UserRepository interface {
+		AddUser(u User) error
+		GetByUsername(username string) (string, error)
+	}
+
 	DefaultRepository struct {
-	Products []Product
-	DB       *sql.DB
-}
+		Products []Product
+		DB       *sql.DB
+	}
 	Product struct {
 		Id   int    `json:"id"`
 		Name string `json:"name"`
+	}
+
+	User struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Role     string `json:"role"`
 	}
 )
 
