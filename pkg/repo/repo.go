@@ -117,6 +117,6 @@ func (repo *DefaultRepository) InitRepo(user, passwd, dbname string) error {
 func (repo *DefaultRepository) Close() {
 	err := repo.DB.Close()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }

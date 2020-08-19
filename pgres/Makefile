@@ -5,7 +5,7 @@ run:
 	docker container start dev-postgres
 
 container:
-	docker run -d --name dev-postgres -e POSTGRES_PASSWORD=hallo123 -v ${pwd}/postgres-data:/var/lib/postgresql/data -p 5432:5432 pgres_custom
+	docker run -d --name dev-postgres -e POSTGRES_PASSWORD=hallo123 -v postgres-data:/var/lib/postgresql/data -p 5432:5432 pgres_custom
 
 build: Dockerfile
 	docker build -t pgres_custom .
