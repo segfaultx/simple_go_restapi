@@ -44,6 +44,8 @@ type (
 var readMutex = &sync.Mutex{}
 var writeMutex = &sync.Mutex{}
 
+// Products Methods
+
 func (repo *DefaultRepository) GetProductById(id int) (Product, error) {
 	for _, item := range repo.AllProducts() {
 		if item.Id == id {
@@ -111,6 +113,21 @@ func (repo *DefaultRepository) RemoveProduct(p Product) error {
 	go repo.loadAllProducts()
 	return nil
 }
+
+// User methods
+
+func (repo *DefaultRepository) AddUser(u User) error {
+	writeMutex.Lock()
+	defer writeMutex.Unlock()
+
+	return nil
+}
+
+func (repo *DefaultRepository) GetByUsername(username string) (string, error){
+	return "", nil
+}
+
+// Init and Close repo methods
 
 func (repo *DefaultRepository) InitRepo(user, passwd, dbname string) error {
 	dataSourceString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, passwd, dbname)
