@@ -13,8 +13,19 @@ import (
 )
 
 func main() {
+	//TODO: add DI container module to bootstrap application
 	router := mux.NewRouter()
-	repository := repo.DefaultRepository{Products: nil}
+	repository := repo.DefaultRepository{Products: nil, Users: nil}
+	user := os.Getenv("POSTGRES_USER")
+	passwd := os.Getenv("POSTGRES_PASSWORD")
+	dbname := os.Getenv("POSTGRES_DBNAME")
+	err := repository.InitRepo(user, passwd, dbname)
+	if err != nil {
+		panic(err)
+	}
+
+	//authService := auth.New(&repository)
+
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, os.Interrupt)
 	defer log.Println("done")
@@ -25,13 +36,6 @@ func main() {
 		}
 	}()
 	defer repository.Close()
-	user := os.Getenv("POSTGRES_USER")
-	passwd := os.Getenv("POSTGRES_PASSWORD")
-	dbname := os.Getenv("POSTGRES_DBNAME")
-	err := repository.InitRepo(user, passwd, dbname)
-	if err != nil {
-		panic(err)
-	}
 	router.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
 	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(&repository)).Methods("GET", "POST")
 	server := &http.Server{Addr: ":8080", Handler: router}
