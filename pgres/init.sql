@@ -1,7 +1,3 @@
-CREATE USER docker;
-CREATE DATABASE docker;
-GRANT ALL PRIVILEGES ON DATABASE docker to docker;
-
 CREATE TABLE products
 (
 	ID SERIAL,
