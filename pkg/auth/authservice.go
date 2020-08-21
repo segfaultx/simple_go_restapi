@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/segfaultx/simple_rest/pkg/repo"
 	"log"
 	"os"
 	"time"
@@ -13,18 +14,32 @@ var jwtKey = []byte(os.Getenv("API_SECRET"))
 type (
 	AuthenticationService interface {
 		GenerateToken(credentials Credentials) (string, error)
-		GetTokenFromString(tokenstring string) (*jwt.Token, error)
+		GetTokenFromString(tokenString string) (*jwt.Token, error)
 	}
 
 	Credentials struct {
-		Password string   `json:"password"`
-		Username string   `json:"username"`
-		Roles    []string `json:"roles"`
+		Password string `json:"password"`
+		Username string `json:"username"`
+		Role     Role `json:"roles"`
 	}
 
+	Role string
+
 	BasicJwtAuthService struct {
+		repo repo.UserRepository
 	}
 )
+
+const (
+	ADMIN Role = "ADMIN"
+	USER Role = "USER"
+)
+
+func New(repository repo.UserRepository) AuthenticationService {
+	authService := new(BasicJwtAuthService)
+	authService.repo = repository
+	return authService
+}
 
 func (authService *BasicJwtAuthService) GenerateToken(credentials Credentials) (string, error) {
 	claims := make(jwt.MapClaims)
@@ -36,8 +51,8 @@ func (authService *BasicJwtAuthService) GenerateToken(credentials Credentials) (
 	return token.SignedString(jwtKey)
 }
 
-func (authService *BasicJwtAuthService) GetTokenFromString(tokenstring string) (*jwt.Token, error) {
-	token, ok := jwt.ParseWithClaims(tokenstring, &jwt.MapClaims{}, func(tok *jwt.Token) (interface{}, error) {
+func (authService *BasicJwtAuthService) GetTokenFromString(tokenString string) (*jwt.Token, error) {
+	token, ok := jwt.ParseWithClaims(tokenString, &jwt.MapClaims{}, func(tok *jwt.Token) (interface{}, error) {
 		if _, ok := tok.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", tok.Header["alg"])
 		}
