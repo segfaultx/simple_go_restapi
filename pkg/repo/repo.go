@@ -27,6 +27,7 @@ type (
 
 	DefaultRepository struct {
 		Products []Product
+		Users    []User
 		DB       *sql.DB
 	}
 	Product struct {
@@ -35,6 +36,7 @@ type (
 	}
 
 	User struct {
+		Id       int    `json:"id"`
 		Username string `json:"username"`
 		Password string `json:"password"`
 		Role     string `json:"role"`
@@ -116,14 +118,35 @@ func (repo *DefaultRepository) RemoveProduct(p Product) error {
 
 // User methods
 
+func (repo *DefaultRepository) loadAllUsers() {
+	readMutex.Lock()
+	defer readMutex.Unlock()
+	repo.Users = make([]User, 0)
+
+	rows, err := repo.DB.Query("SELECT * from users")
+	if err != nil {
+		panic(err)
+	}
+	for rows.Next() {
+		user := User{}
+		err = rows.Scan(&user.Id, &user.Username, &user.Password, &user.Role)
+		if err != nil {
+			panic(err)
+		}
+		repo.Users = append(repo.Users, user)
+	}
+}
+
 func (repo *DefaultRepository) AddUser(u User) error {
 	writeMutex.Lock()
 	defer writeMutex.Unlock()
-
 	return nil
 }
 
-func (repo *DefaultRepository) GetByUsername(username string) (string, error){
+func (repo *DefaultRepository) GetByUsername(username string) (string, error) {
+	if repo.Users == nil {
+		repo.loadAllUsers()
+	}
 	return "", nil
 }
 
