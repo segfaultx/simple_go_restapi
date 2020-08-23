@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func MakeProductsHandler(repository repo.ProductRepository) http.HandlerFunc {
@@ -108,7 +109,7 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 	}
 }
 
-func MakeAuthenticationHandler(service auth.AuthenticationService) http.HandlerFunc {
+func MakeRegisterHandler(service auth.AuthenticationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		credentials := auth.Credentials{}
 		err := decodeRequestBody(&credentials, request)
@@ -124,6 +125,29 @@ func MakeAuthenticationHandler(service auth.AuthenticationService) http.HandlerF
 			return
 		}
 		writer.WriteHeader(http.StatusOK)
+	}
+}
+
+func MakeLoginHandler(service auth.AuthenticationService) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		credentials := auth.Credentials{}
+		err := decodeRequestBody(&credentials, request)
+		if err != nil {
+			writer.WriteHeader(http.StatusBadRequest)
+			_, _ = writer.Write([]byte(err.Error()))
+			return
+		}
+		token, err := service.GenerateToken(credentials)
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			_, _ = writer.Write([]byte(err.Error()))
+			return
+		}
+		expiration := time.Now().Add(time.Minute * 5)
+		cookie := http.Cookie{Name: "token", Value: token, Expires: expiration, HttpOnly: true, Secure: true}
+		http.SetCookie(writer, &cookie)
+		writer.WriteHeader(http.StatusOK)
+		_, _ = writer.Write([]byte(token))
 	}
 }
 
