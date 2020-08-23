@@ -1,11 +1,10 @@
-package tests
+package handlers
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
-	"github.com/segfaultx/simple_rest/pkg/handlers"
 	"github.com/segfaultx/simple_rest/pkg/repo"
 	"net/http"
 	"net/http/httptest"
@@ -97,7 +96,7 @@ func TestMakeAllProductsHandlerGET(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeAllProductsHandler(&repository)
+	handler := MakeAllProductsHandler(&repository)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf(errorMsgStatusCode, status, http.StatusOK)
@@ -120,7 +119,7 @@ func TestMakeAllProductsHandlerPOST(t *testing.T) {
 	}
 	req.Header.Set(contentTypeHeader, contentType)
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeAllProductsHandler(&repository)
+	handler := MakeAllProductsHandler(&repository)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf(errorMsgStatusCode, status, http.StatusOK)
@@ -142,7 +141,7 @@ func TestMakeAllProductsHandlerPOSTFail(t *testing.T) {
 	}
 	req.Header.Set(contentTypeHeader, contentType)
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeAllProductsHandler(&repository)
+	handler := MakeAllProductsHandler(&repository)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusBadRequest {
 		t.Errorf(errorMsgStatusCode, status, http.StatusBadRequest)
@@ -169,7 +168,7 @@ func TestMakeProductsHandlerGET(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeProductsHandler(&repository)
+	handler := MakeProductsHandler(&repository)
 	router := initRouter(handler, "GET")
 	router.ServeHTTP(rr, req)
 
@@ -191,7 +190,7 @@ func TestMakeProductsHandlerGETNotExistingProduct(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeProductsHandler(&repository)
+	handler := MakeProductsHandler(&repository)
 	initRouter(handler, "GET").ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusInternalServerError {
 		t.Errorf(errorMsgStatusCode, status, http.StatusInternalServerError)
@@ -205,7 +204,7 @@ func TestMakeProductsHandlerDELETE(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeProductsHandler(&repository)
+	handler := MakeProductsHandler(&repository)
 	initRouter(handler, "DELETE").ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf(errorMsgStatusCode, status, http.StatusOK)
@@ -220,7 +219,7 @@ func TestMakeProductsHandlerDELETENotExistingProduct(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeProductsHandler(&repository)
+	handler := MakeProductsHandler(&repository)
 	initRouter(handler, "DELETE").ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusInternalServerError {
 		t.Errorf(errorMsgStatusCode, status, http.StatusInternalServerError)
@@ -242,7 +241,7 @@ func TestMakeProductsHandlerPUT(t *testing.T) {
 	req.Header.Set(contentTypeHeader, contentType)
 
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeProductsHandler(&repository)
+	handler := MakeProductsHandler(&repository)
 	router := initRouter(handler, "PUT")
 	router.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
@@ -259,7 +258,7 @@ func TestMakeProductsHandlerPUTFAILBadRequestBody(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeProductsHandler(&repository)
+	handler := MakeProductsHandler(&repository)
 	initRouter(handler, "PUT").ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusInternalServerError {
 		t.Errorf(errorMsgStatusCode, status, http.StatusInternalServerError)
@@ -279,7 +278,7 @@ func TestMakeProductsHandlerPUTFAILBadRequestID(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeProductsHandler(&repository)
+	handler := MakeProductsHandler(&repository)
 	initRouter(handler, "PUT").ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusInternalServerError {
 		t.Errorf(errorMsgStatusCode, status, http.StatusInternalServerError)
@@ -292,7 +291,7 @@ func TestMakeProductsHandlerBADURLParam(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := handlers.MakeProductsHandler(&repository)
+	handler := MakeProductsHandler(&repository)
 	initRouter(handler, "PUT").ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusBadRequest {
 		t.Errorf(errorMsgStatusCode, status, http.StatusBadRequest)
