@@ -110,28 +110,21 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 
 func MakeAuthenticationHandler(service auth.AuthenticationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		switch request.Method {
-		case "POST":
-			handleAuthPost(service, writer, request)
+		credentials := auth.Credentials{}
+		err := decodeRequestBody(&credentials, request)
+		if err != nil {
+			writer.WriteHeader(http.StatusBadRequest)
+			_, _ = writer.Write([]byte(err.Error()))
+			return
 		}
+		err = service.RegisterUser(credentials.Username, credentials.Password)
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			_, _ = writer.Write([]byte(err.Error()))
+			return
+		}
+		writer.WriteHeader(http.StatusOK)
 	}
-}
-
-func handleAuthPost(service auth.AuthenticationService, writer http.ResponseWriter, r *http.Request) {
-	credentials := auth.Credentials{}
-	err := decodeRequestBody(&credentials, r)
-	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
-		_, _ = writer.Write([]byte(err.Error()))
-		return
-	}
-	err = service.RegisterUser(credentials.Username, credentials.Password)
-	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		_, _ = writer.Write([]byte(err.Error()))
-		return
-	}
-	writer.WriteHeader(http.StatusOK)
 }
 
 func decodeRequestBody(t interface{}, request *http.Request) error {
