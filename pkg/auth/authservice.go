@@ -69,7 +69,7 @@ func (authService *BasicJwtAuthService) GenerateToken(credentials Credentials) (
 }
 
 func checkPassword(user repo.User, credentials Credentials) error {
-	return bcrypt.CompareHashAndPassword([]byte(credentials.Password), []byte(user.Password))
+	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password))
 }
 
 func (authService *BasicJwtAuthService) GetTokenFromString(tokenString string) (*jwt.Token, error) {
