@@ -42,6 +42,9 @@ func (authService *BasicJwtAuthService) RegisterUser(username, password string) 
 		return errors.New("username already taken")
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 	usr := repo.User{Username: username, Password: string(hashedPassword), Role: repo.USER}
 	return authService.repo.AddUser(usr)
 }
