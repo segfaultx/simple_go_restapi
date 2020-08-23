@@ -1,4 +1,4 @@
-FROM golang
+FROM alpine
 
 LABEL golang_test="GO TEST"
 EXPOSE 8080
