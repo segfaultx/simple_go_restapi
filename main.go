@@ -39,7 +39,8 @@ func main() {
 	defer repository.Close()
 	router.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
 	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(&repository)).Methods("GET", "POST")
-	router.HandleFunc("/auth", handlers.MakeAuthenticationHandler(authService)).Methods("POST")
+	router.HandleFunc("/register", handlers.MakeRegisterHandler(authService)).Methods("POST")
+	router.HandleFunc("/login", handlers.MakeLoginHandler(authService)).Methods("POST")
 	server := &http.Server{Addr: ":8080", Handler: router}
 	go func() {
 		log.Println("starting API server...")
