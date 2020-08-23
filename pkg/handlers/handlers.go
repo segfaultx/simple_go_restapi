@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/segfaultx/simple_rest/pkg/auth"
 	"github.com/segfaultx/simple_rest/pkg/repo"
 	"log"
 	"net/http"
@@ -88,6 +89,12 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 					_, _ = writer.Write([]byte(err.Error()))
 					return
 				}
+				// TODO: add min length to db schema
+				if len(product.Name) <= 3 {
+					writer.WriteHeader(http.StatusBadRequest)
+					_, _ = writer.Write([]byte("invalid product name"))
+					return
+				}
 				err = repository.AddProduct(product)
 				if err != nil {
 					writer.WriteHeader(http.StatusInternalServerError)
@@ -99,6 +106,32 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 			}
 		}
 	}
+}
+
+func MakeAuthenticationHandler(service auth.AuthenticationService) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		switch request.Method {
+		case "POST":
+			handleAuthPost(service, writer, request)
+		}
+	}
+}
+
+func handleAuthPost(service auth.AuthenticationService, writer http.ResponseWriter, r *http.Request) {
+	credentials := auth.Credentials{}
+	err := decodeRequestBody(&credentials, r)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		_, _ = writer.Write([]byte(err.Error()))
+		return
+	}
+	err = service.RegisterUser(credentials.Username, credentials.Password)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		_, _ = writer.Write([]byte(err.Error()))
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
 }
 
 func decodeRequestBody(t interface{}, request *http.Request) error {
