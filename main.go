@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gorilla/mux"
+	"github.com/segfaultx/simple_rest/pkg/auth"
 	"github.com/segfaultx/simple_rest/pkg/handlers"
 	"github.com/segfaultx/simple_rest/pkg/repo"
 	"log"
@@ -24,7 +25,7 @@ func main() {
 		panic(err)
 	}
 
-	//authService := auth.New(&repository)
+	authService := auth.New(&repository)
 
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, os.Interrupt)
@@ -38,6 +39,7 @@ func main() {
 	defer repository.Close()
 	router.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
 	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(&repository)).Methods("GET", "POST")
+	router.HandleFunc("/auth", handlers.MakeAuthenticationHandler(authService)).Methods("POST")
 	server := &http.Server{Addr: ":8080", Handler: router}
 	go func() {
 		log.Println("starting API server...")
