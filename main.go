@@ -13,10 +13,8 @@ import (
 	"time"
 )
 
-func main() {
-	//TODO: add DI container module to bootstrap application
-	router := mux.NewRouter()
-	repository := repo.DefaultRepository{Products: nil, Users: nil}
+func setupRepo() *repo.DefaultRepository {
+	repository := repo.New()
 	user := os.Getenv("POSTGRES_USER")
 	passwd := os.Getenv("POSTGRES_PASSWORD")
 	dbname := os.Getenv("POSTGRES_DBNAME")
@@ -24,35 +22,55 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	return repository
+}
 
-	authService := auth.New(&repository)
+func errorFunc() {
+	r := recover()
+	if r != nil {
+		log.Fatal(r)
+	}
+}
 
+func setupRoutes(router *mux.Router, repository repo.ProductRepository, service auth.AuthenticationService) {
+	router.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(repository)).Methods("GET", "DELETE", "PUT")
+	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(repository)).Methods("GET", "POST")
+	router.HandleFunc("/register", handlers.MakeRegisterHandler(service)).Methods("POST")
+	router.HandleFunc("/login", handlers.MakeLoginHandler(service)).Methods("POST")
+}
+
+func listenAndServe(server *http.Server){
+	log.Println("starting API server...")
+	if err := server.ListenAndServe(); err != nil {
+		log.Println("shutting down server, cleaning up...")
+	}
+}
+
+func handleInterrupt(server *http.Server){
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, os.Interrupt)
-	defer log.Println("done")
-	defer func() {
-		r := recover()
-		if r != nil {
-			log.Fatal(r)
-		}
-	}()
-	defer repository.Close()
-	router.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(&repository)).Methods("GET", "DELETE", "PUT")
-	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(&repository)).Methods("GET", "POST")
-	router.HandleFunc("/register", handlers.MakeRegisterHandler(authService)).Methods("POST")
-	router.HandleFunc("/login", handlers.MakeLoginHandler(authService)).Methods("POST")
-	server := &http.Server{Addr: ":8080", Handler: router}
-	go func() {
-		log.Println("starting API server...")
-		if err := server.ListenAndServe(); err != nil {
-			log.Println("shutting down server, cleaning up...")
-		}
-	}()
-
-	<- stopSignal
+	<-stopSignal
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
 		panic(err)
 	}
+}
+
+func main() {
+	//TODO: add DI container module to bootstrap application
+	router := mux.NewRouter()
+	repository := setupRepo()
+	authService := auth.New(repository)
+	defer log.Println("done")
+	defer errorFunc()
+	defer repository.Close()
+
+	setupRoutes(router, repository, authService)
+	
+	server := &http.Server{Addr: ":8080", Handler: router}
+	
+	go listenAndServe(server)
+	
+	handleInterrupt(server)
 }
