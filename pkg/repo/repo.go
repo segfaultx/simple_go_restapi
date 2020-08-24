@@ -38,3 +38,7 @@ func (repo *DefaultRepository) Close() {
 		panic(err)
 	}
 }
+
+func New() *DefaultRepository {
+	return &DefaultRepository{Products: nil, Users: nil}
+}
