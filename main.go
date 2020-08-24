@@ -46,7 +46,7 @@ func listenAndServe(server *http.Server){
 	}
 }
 
-func handleInterrupt(server *http.Server){
+func shutdownOnInterrupt(server *http.Server){
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, os.Interrupt)
 	<-stopSignal
@@ -58,7 +58,6 @@ func handleInterrupt(server *http.Server){
 }
 
 func main() {
-	//TODO: add DI container module to bootstrap application
 	router := mux.NewRouter()
 	repository := setupRepo()
 	authService := auth.New(repository)
@@ -72,5 +71,5 @@ func main() {
 	
 	go listenAndServe(server)
 	
-	handleInterrupt(server)
+	shutdownOnInterrupt(server)
 }
