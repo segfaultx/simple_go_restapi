@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/segfaultx/simple_rest/pkg/auth"
 	"github.com/segfaultx/simple_rest/pkg/repo"
@@ -72,8 +74,28 @@ func handlePut(repository repo.ProductRepository, writer http.ResponseWriter, re
 	_, _ = writer.Write(resp)
 }
 
-func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc {
+func MakeAllProductsHandler(repository repo.ProductRepository, service auth.AuthenticationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
+		token, err := checkUserAuthentication(request, service)
+		if err != nil {
+			writer.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		refreshedToken, err := service.RefreshToken(token)
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		} else {
+			expiration := time.Now().Add(time.Minute * 10)
+			cookie := http.Cookie{Name: "token",
+				Value: refreshedToken,
+				Expires: expiration,
+				HttpOnly: true,
+				Secure: false,
+				Path: "/"}
+			http.SetCookie(writer, &cookie)
+		}
+
 		switch request.Method {
 		case "GET":
 			{
@@ -83,13 +105,13 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 			}
 		case "POST":
 			{
+
 				product := repo.Product{}
-				err := decodeRequestBody(&product, request)
+				err = decodeRequestBody(&product, request)
 				if err != nil {
 					writer.WriteHeader(http.StatusBadRequest)
 					return
 				}
-				// TODO: add min length to db schema
 				if len(product.Name) <= 3 {
 					writer.WriteHeader(http.StatusBadRequest)
 					_, _ = writer.Write([]byte("invalid product name"))
@@ -106,6 +128,14 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 			}
 		}
 	}
+}
+
+func checkUserAuthentication(request *http.Request, service auth.AuthenticationService) (*jwt.Token, error) {
+	tokenCookie, err := request.Cookie("token")
+	if err != nil {
+		return &jwt.Token{}, errors.New("user not authenticated")
+	}
+	return service.GetTokenFromString(tokenCookie.Value)
 }
 
 func MakeRegisterHandler(service auth.AuthenticationService) http.HandlerFunc {
@@ -138,8 +168,13 @@ func MakeLoginHandler(service auth.AuthenticationService) http.HandlerFunc {
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		expiration := time.Now().Add(time.Minute * 5)
-		cookie := http.Cookie{Name: "token", Value: token, Expires: expiration, HttpOnly: true, Secure: true}
+		expiration := time.Now().Add(time.Minute * 10)
+		cookie := http.Cookie{Name: "token",
+			Value: token,
+			Expires: expiration,
+			HttpOnly: true,
+			Secure: false,
+			Path: "/"}
 		http.SetCookie(writer, &cookie)
 		writer.WriteHeader(http.StatusOK)
 		_, _ = writer.Write([]byte(token))
