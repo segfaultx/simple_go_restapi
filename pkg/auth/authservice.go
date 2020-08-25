@@ -18,6 +18,7 @@ type (
 		GenerateToken(credentials Credentials) (string, error)
 		GetTokenFromString(tokenString string) (*jwt.Token, error)
 		RegisterUser(username, password string) error
+		RefreshToken(token *jwt.Token) (string, error)
 	}
 
 	Credentials struct {
@@ -86,4 +87,15 @@ func (authService *BasicJwtAuthService) GetTokenFromString(tokenString string) (
 		return token, nil
 	}
 	return &jwt.Token{}, jwt.ErrSignatureInvalid
+}
+
+func (authService *BasicJwtAuthService) RefreshToken(token *jwt.Token) (string, error) {
+	claims := *(token.Claims.(*jwt.MapClaims))
+	refreshClaims := make(jwt.MapClaims)
+	refreshClaims["authorized"] = claims["authorized"]
+	refreshClaims["userId"] = claims["userId"]
+	refreshClaims["role"] = claims["role"]
+	refreshClaims["exp"] = time.Now().Add(10 * time.Minute).Unix()
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
+	return refreshToken.SignedString(jwtKey)
 }
