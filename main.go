@@ -34,7 +34,7 @@ func errorFunc() {
 
 func setupRoutes(router *mux.Router, repository repo.ProductRepository, service auth.AuthenticationService) {
 	router.HandleFunc("/catalog/products/{id}", handlers.MakeProductsHandler(repository)).Methods("GET", "DELETE", "PUT")
-	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(repository)).Methods("GET", "POST")
+	router.HandleFunc("/catalog/products", handlers.MakeAllProductsHandler(repository, service)).Methods("GET", "POST")
 	router.HandleFunc("/register", handlers.MakeRegisterHandler(service)).Methods("POST")
 	router.HandleFunc("/login", handlers.MakeLoginHandler(service)).Methods("POST")
 }
