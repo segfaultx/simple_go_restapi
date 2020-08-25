@@ -87,7 +87,6 @@ func MakeAllProductsHandler(repository repo.ProductRepository) http.HandlerFunc 
 				err := decodeRequestBody(&product, request)
 				if err != nil {
 					writer.WriteHeader(http.StatusBadRequest)
-					_, _ = writer.Write([]byte(err.Error()))
 					return
 				}
 				// TODO: add min length to db schema
@@ -115,13 +114,11 @@ func MakeRegisterHandler(service auth.AuthenticationService) http.HandlerFunc {
 		err := decodeRequestBody(&credentials, request)
 		if err != nil {
 			writer.WriteHeader(http.StatusBadRequest)
-			_, _ = writer.Write([]byte(err.Error()))
 			return
 		}
 		err = service.RegisterUser(credentials.Username, credentials.Password)
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
-			_, _ = writer.Write([]byte(err.Error()))
 			return
 		}
 		writer.WriteHeader(http.StatusOK)
@@ -134,13 +131,11 @@ func MakeLoginHandler(service auth.AuthenticationService) http.HandlerFunc {
 		err := decodeRequestBody(&credentials, request)
 		if err != nil {
 			writer.WriteHeader(http.StatusBadRequest)
-			_, _ = writer.Write([]byte(err.Error()))
 			return
 		}
 		token, err := service.GenerateToken(credentials)
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
-			_, _ = writer.Write([]byte(err.Error()))
 			return
 		}
 		expiration := time.Now().Add(time.Minute * 5)
