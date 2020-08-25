@@ -76,24 +76,17 @@ func handlePut(repository repo.ProductRepository, writer http.ResponseWriter, re
 
 func MakeAllProductsHandler(repository repo.ProductRepository, service auth.AuthenticationService) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
+		userAuthenticated := false
 		token, err := checkUserAuthentication(request, service)
-		if err != nil {
-			writer.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		refreshedToken, err := service.RefreshToken(token)
-		if err != nil {
-			writer.WriteHeader(http.StatusInternalServerError)
-			return
-		} else {
-			expiration := time.Now().Add(time.Minute * 10)
-			cookie := http.Cookie{Name: "token",
-				Value: refreshedToken,
-				Expires: expiration,
-				HttpOnly: true,
-				Secure: false,
-				Path: "/"}
-			http.SetCookie(writer, &cookie)
+		if err == nil {
+			userAuthenticated = true
+			refreshedToken, err := service.RefreshToken(token)
+			if err != nil {
+				writer.WriteHeader(http.StatusInternalServerError)
+				return
+			} else {
+				addCookieToRequest(writer, refreshedToken)
+			}
 		}
 
 		switch request.Method {
@@ -105,7 +98,10 @@ func MakeAllProductsHandler(repository repo.ProductRepository, service auth.Auth
 			}
 		case "POST":
 			{
-
+				if !userAuthenticated {
+					writer.WriteHeader(http.StatusUnauthorized)
+					return
+				}
 				product := repo.Product{}
 				err = decodeRequestBody(&product, request)
 				if err != nil {
@@ -168,17 +164,21 @@ func MakeLoginHandler(service auth.AuthenticationService) http.HandlerFunc {
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		expiration := time.Now().Add(time.Minute * 10)
-		cookie := http.Cookie{Name: "token",
-			Value: token,
-			Expires: expiration,
-			HttpOnly: true,
-			Secure: false,
-			Path: "/"}
-		http.SetCookie(writer, &cookie)
+		addCookieToRequest(writer, token)
 		writer.WriteHeader(http.StatusOK)
 		_, _ = writer.Write([]byte(token))
 	}
+}
+
+func addCookieToRequest(writer http.ResponseWriter, token string) {
+	expiration := time.Now().Add(time.Minute * 10)
+	cookie := http.Cookie{Name: "token",
+		Value:    token,
+		Expires:  expiration,
+		HttpOnly: true,
+		Secure:   false,
+		Path:     "/"}
+	http.SetCookie(writer, &cookie)
 }
 
 func decodeRequestBody(t interface{}, request *http.Request) error {

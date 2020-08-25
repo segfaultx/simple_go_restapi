@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/segfaultx/simple_rest/pkg/auth"
 	"github.com/segfaultx/simple_rest/pkg/repo"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 type mockRepo struct {
@@ -82,21 +84,60 @@ func initMockRepo() {
 	}
 }
 
+type MockUserRepo struct {
+	Users []repo.User
+}
+
+func (mockRepo *MockUserRepo) AddUser(u repo.User) error {
+	if u.Username == "fail" {
+		return errors.New("should fail here")
+	}
+	mockRepo.Users = append(mockRepo.Users, u)
+	return nil
+}
+
+func (mockRepo *MockUserRepo) GetByUsername(username string) (repo.User, error) {
+	for _, user := range mockRepo.Users {
+		if user.Username == username {
+			return user, nil
+		}
+	}
+	return repo.User{}, errors.New("user not found")
+}
+
+
+func prepareAuthService() auth.AuthenticationService {
+	return &auth.BasicJwtAuthService{Repo: &MockUserRepo{}}
+}
+
 func initRouter(handler http.HandlerFunc, method string) *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc(baseUrl+"/{id}", handler).Methods(method)
 	return router
 }
 
+func authenticate(req *http.Request, service auth.AuthenticationService){
+	_ = service.RegisterUser("hugo", "test")
+	token, _ := service.GenerateToken(auth.Credentials{Username: "hugo", Password: "test"})
+	expiration := time.Now().Add(time.Minute * 10)
+	cookie := http.Cookie{Name: "token",
+		Value:    token,
+		Expires:  expiration,
+		HttpOnly: true,
+		Secure:   false,
+		Path:     "/"}
+	req.AddCookie(&cookie)
+}
+
 func TestMakeAllProductsHandlerGET(t *testing.T) {
 	initMockRepo()
-
+	service := prepareAuthService()
 	req, err := http.NewRequest("GET", baseUrl, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	handler := MakeAllProductsHandler(&repository)
+	handler := MakeAllProductsHandler(&repository, service)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf(errorMsgStatusCode, status, http.StatusOK)
@@ -109,7 +150,7 @@ func TestMakeAllProductsHandlerGET(t *testing.T) {
 
 func TestMakeAllProductsHandlerPOST(t *testing.T) {
 	initMockRepo()
-
+	service := prepareAuthService()
 	newProduct := repo.Product{Id: 2, Name: "Schuhe"}
 	newProductJson, _ := json.Marshal(newProduct)
 	reader := bytes.NewReader(newProductJson)
@@ -117,9 +158,10 @@ func TestMakeAllProductsHandlerPOST(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	authenticate(req, service)
 	req.Header.Set(contentTypeHeader, contentType)
 	rr := httptest.NewRecorder()
-	handler := MakeAllProductsHandler(&repository)
+	handler := MakeAllProductsHandler(&repository, service)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf(errorMsgStatusCode, status, http.StatusOK)
@@ -134,14 +176,16 @@ func TestMakeAllProductsHandlerPOST(t *testing.T) {
 
 func TestMakeAllProductsHandlerPOSTFail(t *testing.T) {
 	initMockRepo()
+	service := prepareAuthService()
 	reader := bytes.NewReader([]byte("aiusazdvawldkab"))
 	req, err := http.NewRequest("POST", baseUrl, reader)
 	if err != nil {
 		t.Fatal(err)
 	}
+	authenticate(req, service)
 	req.Header.Set(contentTypeHeader, contentType)
 	rr := httptest.NewRecorder()
-	handler := MakeAllProductsHandler(&repository)
+	handler := MakeAllProductsHandler(&repository, service)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusBadRequest {
 		t.Errorf(errorMsgStatusCode, status, http.StatusBadRequest)
@@ -154,6 +198,7 @@ func TestMakeAllProductsHandlerPOSTFail(t *testing.T) {
 	}
 	req.Header.Set(contentTypeHeader, contentType)
 	rr = httptest.NewRecorder()
+	authenticate(req, service)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusInternalServerError {
 		t.Errorf("unexpected statuscode, got %d expected %d", status, http.StatusInternalServerError)

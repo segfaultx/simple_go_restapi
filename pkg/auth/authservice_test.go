@@ -35,7 +35,7 @@ const (
 )
 
 func prepareAuthService() AuthenticationService {
-	return &BasicJwtAuthService{repo: &MockUserRepo{}}
+	return &BasicJwtAuthService{Repo: &MockUserRepo{}}
 }
 
 func TestNew(t *testing.T) {

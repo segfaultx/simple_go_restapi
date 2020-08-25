@@ -27,18 +27,18 @@ type (
 	}
 
 	BasicJwtAuthService struct {
-		repo repo.UserRepository
+		Repo repo.UserRepository
 	}
 )
 
 func New(repository repo.UserRepository) AuthenticationService {
 	authService := new(BasicJwtAuthService)
-	authService.repo = repository
+	authService.Repo = repository
 	return authService
 }
 
 func (authService *BasicJwtAuthService) RegisterUser(username, password string) error {
-	_, err := authService.repo.GetByUsername(username)
+	_, err := authService.Repo.GetByUsername(username)
 	if err == nil {
 		return errors.New("username already taken")
 	}
@@ -47,11 +47,11 @@ func (authService *BasicJwtAuthService) RegisterUser(username, password string) 
 		return err
 	}
 	usr := repo.User{Username: username, Password: string(hashedPassword), Role: repo.USER}
-	return authService.repo.AddUser(usr)
+	return authService.Repo.AddUser(usr)
 }
 
 func (authService *BasicJwtAuthService) GenerateToken(credentials Credentials) (string, error) {
-	usr, err := authService.repo.GetByUsername(credentials.Username)
+	usr, err := authService.Repo.GetByUsername(credentials.Username)
 	if err != nil {
 		return "", err
 	}
