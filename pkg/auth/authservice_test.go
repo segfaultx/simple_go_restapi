@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 type MockUserRepo struct {
@@ -143,5 +144,37 @@ func TestBasicJwtAuthService_GenerateToken_Invalid_Password(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected %v, received %v", errors.New("user not found"), err)
 		t.FailNow()
+	}
+}
+
+func TestBasicJwtAuthService_RefreshToken(t *testing.T) {
+	service := prepareAuthService()
+	err := service.RegisterUser("hugo", "test")
+	if err != nil {
+		t.Errorf("expected %v, received %v", nil, err)
+		t.FailNow()
+	}
+	creds := Credentials{Username: "hugo", Password: "test"}
+	tokenString, err := service.GenerateToken(creds)
+	if err != nil {
+		t.Errorf("expected %v, received %v", errors.New("user not found"), err)
+		t.FailNow()
+	}
+	token, err := service.GetTokenFromString(tokenString)
+	if err != nil {
+		t.Errorf("expected %v, received %v", nil, err)
+		t.FailNow()
+	}
+	// wait 5 seconds for timestamp update
+	time.Sleep(time.Second * 5)
+	refreshToken, err := service.RefreshToken(token)
+
+	if err != nil {
+		t.Errorf("expected %v, received %v", nil, err)
+		t.FailNow()
+	}
+	// token should look different after update
+	if refreshToken == tokenString {
+		t.Errorf("expected %s, received %s", tokenString, refreshToken)
 	}
 }
