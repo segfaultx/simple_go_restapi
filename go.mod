@@ -1,6 +1,6 @@
 module github.com/segfaultx/simple_rest
 
-go 1.15
+go 1.151
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
