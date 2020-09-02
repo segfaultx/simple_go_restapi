@@ -2,7 +2,7 @@
 .PHONY: run clean
 
 main: main.go
-	go build main.go
+	go build
 
 run:
 	./main
