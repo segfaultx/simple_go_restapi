@@ -39,14 +39,14 @@ func setupRoutes(router *mux.Router, repository repo.ProductRepository, service 
 	router.HandleFunc("/login", handlers.MakeLoginHandler(service)).Methods("POST")
 }
 
-func listenAndServe(server *http.Server){
+func listenAndServe(server *http.Server) {
 	log.Println("starting API server...")
 	if err := server.ListenAndServe(); err != nil {
 		log.Println("shutting down server, cleaning up...")
 	}
 }
 
-func shutdownOnInterrupt(server *http.Server){
+func shutdownOnInterrupt(server *http.Server) {
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, os.Interrupt)
 	<-stopSignal
@@ -66,10 +66,10 @@ func main() {
 	defer repository.Close()
 
 	setupRoutes(router, repository, authService)
-	
+
 	server := &http.Server{Addr: ":8080", Handler: router}
-	
+
 	go listenAndServe(server)
-	
+
 	shutdownOnInterrupt(server)
 }
