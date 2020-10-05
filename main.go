@@ -41,7 +41,9 @@ func setupRoutes(router *mux.Router, repository repo.ProductRepository, service 
 
 func listenAndServe(server *http.Server) {
 	log.Println("starting API server...")
-	if err := server.ListenAndServe(); err != nil {
+	certFile := os.Getenv("CERT_FILE")
+	keyfile := os.Getenv("KEY_FILE")
+	if err := server.ListenAndServeTLS(certFile, keyfile); err != nil {
 		log.Println("shutting down server, cleaning up...")
 	}
 }
