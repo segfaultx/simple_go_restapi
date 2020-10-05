@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+const DEFAULTSuccessHeaderAPIType = "application/json; charset=UTF-8"
+
 func MakeProductsHandler(repository repo.ProductRepository) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		vars := mux.Vars(request)
@@ -71,6 +73,7 @@ func handlePut(repository repo.ProductRepository, writer http.ResponseWriter, re
 	}
 	writer.WriteHeader(http.StatusOK)
 	resp, _ := json.Marshal(product)
+	setDefaultHeader(writer)
 	_, _ = writer.Write(resp)
 }
 
@@ -94,6 +97,7 @@ func MakeAllProductsHandler(repository repo.ProductRepository, service auth.Auth
 			{
 				products := repository.AllProducts()
 				resp, _ := json.Marshal(products)
+				setDefaultHeader(writer)
 				_, _ = writer.Write(resp)
 			}
 		case "POST":
@@ -120,6 +124,7 @@ func MakeAllProductsHandler(repository repo.ProductRepository, service auth.Auth
 					return
 				}
 				resp, _ := json.Marshal(product)
+				setDefaultHeader(writer)
 				_, _ = writer.Write(resp)
 			}
 		}
@@ -185,4 +190,8 @@ func decodeRequestBody(t interface{}, request *http.Request) error {
 	decoder := json.NewDecoder(request.Body)
 	err := decoder.Decode(t)
 	return err
+}
+
+func setDefaultHeader(writer http.ResponseWriter){
+	writer.Header().Set("Content-Type", DEFAULTSuccessHeaderAPIType)
 }
